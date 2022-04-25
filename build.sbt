@@ -9,7 +9,5 @@ lazy val root = (project in file("."))
     organizationName := "example",
     libraryDependencies ++= Testing.apply
   )
-  .withDocker
-  .withForking
-  .withScalafix
+  .withOpinionatedDefaults
 
