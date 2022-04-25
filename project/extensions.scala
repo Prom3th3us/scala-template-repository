@@ -2,7 +2,6 @@ import com.typesafe.sbt.packager.archetypes.scripts.AshScriptPlugin
 import com.typesafe.sbt.packager.docker.DockerPlugin
 import sbt.Keys._
 import sbt._
-import sbtdynver.DynVerPlugin.autoImport.dynverSeparator
 import scalafix.sbt.ScalafixPlugin.autoImport.{scalafixOnCompile, scalafixSemanticdb}
 
 object extensions {
@@ -18,7 +17,6 @@ object extensions {
           scalafixOnCompile := true
         )
 
-
       def shouldHaveForking: Project =
         project.settings(
           run / fork := true,
@@ -29,12 +27,24 @@ object extensions {
         project.enablePlugins(DockerPlugin, AshScriptPlugin)
 
       def shouldHaveDynamicVersioning: Project =
-        project.settings(
-          versionScheme   := Some("early-semver"),
-          dynverSeparator := "-",
-          conflictManager := ConflictManager.latestRevision
-        )
-
+        project.settings{
+          import sbt.inputKey
+          val versionBump =
+            inputKey[Unit](
+              """
+                |ie.: sbt "versionBump major"
+                |ie.: sbt "versionBump minor"
+                |ie.: sbt "versionBump patch"
+                |""".stripMargin)
+          versionBump := {
+            import complete.DefaultParsers._
+            new VersionBump(
+              currentVersion = version.value
+            ).apply(
+              arg = spaceDelimited("<arg>").parsed.headOption
+            )
+          }
+        }
 
       def shouldUseJava11: Project =
         project.settings(
